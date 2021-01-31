@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MVVMTODO</string>
+    <string name="task_name">Task Name</string>
+    <string name="important_task">Important Task</string>
+    <string name="add_task_fab">Add task FAB</string>
+    <string name="important_item_indicator">Important Item indicator</string>
 </resources>
