@@ -5,12 +5,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.samsad.mvvmtodo.data.Task
 import com.samsad.mvvmtodo.databinding.ItemTaskBinding
 
-class TasksAdapter : ListAdapter<Task, TaskView> {
+class TasksAdapter : ListAdapter<Task, TasksAdapter.TasksViewHolder> {
 
     class TasksViewHolder(private val binding:ItemTaskBinding) : RecyclerView.ViewHolder(binding.root){
 
         fun bind(task: Task){
-            binding.textViewName = task.name
         }
 
 
