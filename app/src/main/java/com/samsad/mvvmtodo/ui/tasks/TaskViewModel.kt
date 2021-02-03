@@ -3,6 +3,7 @@ package com.samsad.mvvmtodo.ui.tasks
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
+import com.samsad.mvvmtodo.data.SortOrder
 import com.samsad.mvvmtodo.data.TaskDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -30,5 +31,3 @@ class TaskViewModel @ViewModelInject constructor(
     val tasks = taskFlow.asLiveData()
 
 }
-
-enum class SortOrder { BY_NAME, BY_DATE }
