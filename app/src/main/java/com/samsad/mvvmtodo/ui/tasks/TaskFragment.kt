@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.samsad.mvvmtodo.R
 import com.samsad.mvvmtodo.databinding.FragmentTasksBinding
+import com.samsad.mvvmtodo.util.onQueryTextChanged
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -41,6 +42,10 @@ class TaskFragment : Fragment(R.layout.fragment_tasks) {
 
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
+
+        searchView.onQueryTextChanged {
+            //Update search query
+        }
 
     }
 
