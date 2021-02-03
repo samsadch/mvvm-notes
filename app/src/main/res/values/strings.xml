@@ -4,4 +4,10 @@
     <string name="important_task">Important Task</string>
     <string name="add_task_fab">Add task FAB</string>
     <string name="important_item_indicator">Important Item indicator</string>
+    <string name="title_search">Search</string>
+    <string name="title_sort">Sort</string>
+    <string name="sort_by_name">Sort by Name</string>
+    <string name="sort_by_date_created">Sort by date Created</string>
+    <string name="hide_completed">Hide completed</string>
+    <string name="delete_all_completed">Delete all completed</string>
 </resources>
