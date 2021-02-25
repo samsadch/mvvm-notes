@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.Flow
 interface TaskDao {
 
     @Query("SELECT * FROM task_table WHERE name LIKE '%' ||  :searchQuery || '%' ORDER BY important DESC")
-    fun getTasks(
-        searchQuery: String,
+    fun getTasks(searchQuery: String,
         sortOrder: SortOrder,
         hideCompleted: Boolean
-    ): Flow<List<Task>> = when (sortOrder) {
-        SortOrder.BY_DATE -> getTasksSortedByDateCreated(searchQuery, hideCompleted)
-        SortOrder.BY_NAME -> getTasksSortedByName(searchQuery, hideCompleted)
-    }
+    ): Flow<List<Task>> =
+        when (sortOrder) {
+            SortOrder.BY_DATE -> getTasksSortedByDateCreated(searchQuery, hideCompleted)
+            SortOrder.BY_NAME -> getTasksSortedByName(searchQuery, hideCompleted)
+        }
 
     @Query("SELECT * FROM task_table WHERE (completed != :hideCompleted OR completed = 0) AND name LIKE '%' ||  :searchQuery || '%' ORDER BY important DESC, name")
     fun getTasksSortedByName(searchQuery: String, hideCompleted: Boolean): Flow<List<Task>>

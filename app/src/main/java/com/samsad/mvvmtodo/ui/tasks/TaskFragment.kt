@@ -7,19 +7,27 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.samsad.mvvmtodo.R
 import com.samsad.mvvmtodo.data.SortOrder
+import com.samsad.mvvmtodo.data.Task
 import com.samsad.mvvmtodo.databinding.FragmentTasksBinding
+import com.samsad.mvvmtodo.util.exhaustive
 import com.samsad.mvvmtodo.util.onQueryTextChanged
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class TaskFragment : Fragment(R.layout.fragment_tasks) {
+class TaskFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClickListener {
 
     private val viewModel: TaskViewModel by viewModels()
 
@@ -27,7 +35,7 @@ class TaskFragment : Fragment(R.layout.fragment_tasks) {
         super.onViewCreated(view, savedInstanceState)
 
         val binding = FragmentTasksBinding.bind(view)
-        val taskAdapter = TasksAdapter()
+        val taskAdapter = TasksAdapter(this)
         binding.recyclerTasks.adapter = taskAdapter
         binding.apply {
             recyclerTasks.apply {
@@ -35,11 +43,74 @@ class TaskFragment : Fragment(R.layout.fragment_tasks) {
                 adapter = taskAdapter
                 setHasFixedSize(true)
             }
+
+            ItemTouchHelper(object :
+                ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
+                ): Boolean {
+                    return false
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                    val task = taskAdapter.currentList[viewHolder.adapterPosition]
+                    viewModel.onTaskSwiped(task)
+                }
+
+            }).attachToRecyclerView(recyclerTasks)
+
+            fabAddTask.setOnClickListener {
+                viewModel.onAddNewTaskClick()
+            }
+        }
+
+        setFragmentResultListener("add_edit_request") { _, bundle ->
+            val result = bundle.getInt("add_edit_result")
+            viewModel.onAddEditResult(result)
         }
 
         viewModel.tasks.observe(viewLifecycleOwner) {
             taskAdapter.submitList(it)
         }
+
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            //small scope
+            //Instead of getting cancelled on onDestroyView this will cancelled when onStop was called
+            //and restarted when onStart was called - means when we put fragment in background we don't listen to any EVENTS
+            //we don't want to show snackbar when fragment is not visible instead the CHANNEL will wait, it will suspend,
+            //we fragment become foreground corotine start again and it will start collecting the events
+            // in the Channel through the Flow
+            viewModel.tasksEvent.collect { event ->
+                when (event) {
+                    is TaskViewModel.TasksEvent.ShowUndoDeleteTaskMessage -> {
+                        Snackbar.make(requireView(), "Task Deleted", Snackbar.LENGTH_LONG)
+                            .setAction("UNDO") {
+                                viewModel.onUndoDeleteClick(event.task)
+                            }.show()
+                    }
+                    TaskViewModel.TasksEvent.NavigateToAddTaskScreen -> {
+                        val action =
+                            TaskFragmentDirections.actionTaskFragmentToAddEditTaskFragment(title = "Add Task")
+                        findNavController().navigate(action)
+                    }
+                    is TaskViewModel.TasksEvent.NavigateToEditTaskScreen -> {
+                        val action = TaskFragmentDirections.actionTaskFragmentToAddEditTaskFragment(
+                            event.task,
+                            "Edit Task"
+                        )
+                        findNavController().navigate(action)
+                    }
+                    is TaskViewModel.TasksEvent.ShowTaskConfirmationMessage -> {
+                        Snackbar.make(requireView(), event.message, Snackbar.LENGTH_LONG)
+                            .show()
+                    }
+                }.exhaustive
+            }
+
+        }
+
 
         setHasOptionsMenu(true)
     }
@@ -84,5 +155,13 @@ class TaskFragment : Fragment(R.layout.fragment_tasks) {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onItemClicked(task: Task) {
+        viewModel.onTaskSelected(task)
+    }
+
+    override fun onBoxClicked(task: Task, isChecked: Boolean) {
+        viewModel.onTaskCheckedChanged(task, isChecked)
     }
 }

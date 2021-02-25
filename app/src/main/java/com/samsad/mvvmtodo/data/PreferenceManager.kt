@@ -19,12 +19,16 @@ private const val TAG = "PreferenceManager"
 
 enum class SortOrder { BY_NAME, BY_DATE }
 
+/**Class used to return both sort order and hide completed value from preference*/
 data class FilterPreferences(val sortOrder: SortOrder, val hideCompleted: Boolean)
 
 @Singleton
 class PreferenceManager @Inject constructor(@ApplicationContext context: Context) {
+
     private val dataStore = context.createDataStore("user_preferences")
+
     val preferencesFlow = dataStore.data
+            //Flow operator where we can catch exceptions
         .catch { exception ->
             if (exception is IOException) {
                 Log.d(TAG, "Error reading preference ", exception)
@@ -34,17 +38,21 @@ class PreferenceManager @Inject constructor(@ApplicationContext context: Context
             }
         }
         .map { preferences ->
+            //Get sort order from Preference
             val sortOrder = SortOrder.valueOf(
                 preferences[PreferencesKeys.SORT_ORDER] ?: SortOrder.BY_DATE.name
             )
             val hideCompleted = preferences[PreferencesKeys.HIDE_COMPLETED] ?: false
+
+            /**Return two values using @see #FilterPreferences (FilterPreferences)*/
             FilterPreferences(sortOrder, hideCompleted)
 
         }
 
     suspend fun updateSortOrder(sortOrder: SortOrder) {
-        dataStore.edit { preferences ->
-            preferences[PreferencesKeys.SORT_ORDER] = sortOrder.name
+        dataStore.edit {
+            //We can only store String as sort order not Enum
+            it[PreferencesKeys.SORT_ORDER] = sortOrder.name
         }
     }
 
@@ -58,7 +66,5 @@ class PreferenceManager @Inject constructor(@ApplicationContext context: Context
     private object PreferencesKeys {
         val SORT_ORDER = preferencesKey<String>("sort_order")
         val HIDE_COMPLETED = preferencesKey<Boolean>("hide_completed")
-
-
     }
 }
