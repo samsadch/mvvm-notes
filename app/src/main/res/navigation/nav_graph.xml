@@ -27,4 +27,8 @@
             android:name="title"
             app:argType="string" />
     </fragment>
+    <dialog
+        android:id="@+id/deleteCompleteDialogFragment"
+        android:name="com.samsad.mvvmtodo.ui.deletecompleted.DeleteCompleteDialogFragment"
+        android:label="DeleteCompleteDialogFragment" /><action android:id="@+id/action_global_deleteCompleteDialogFragment" app:destination="@id/deleteCompleteDialogFragment"/>
 </navigation>
